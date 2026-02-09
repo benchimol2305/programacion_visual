@@ -20,7 +20,8 @@ public class FXPrincipalController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // TODO
+        Clases.CConexion objetoConexion = new Clases.CConexion();
+        objetoConexion.estableceConexion();
     }    
     
 }
