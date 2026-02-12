@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
 <AnchorPane prefHeight="640.0" prefWidth="900.0"
             xmlns="http://javafx.com/javafx/25"
@@ -12,7 +12,8 @@
    <children>
 
       <!-- PANEL DE CONEXIÓN -->
-      <Pane layoutX="20.0" layoutY="20.0" prefHeight="240.0" prefWidth="260.0" style="-fx-border-color: black; -fx-background-color: #f4f4f4;">
+      <Pane layoutX="20.0" layoutY="20.0" prefHeight="240.0" prefWidth="260.0"
+            style="-fx-border-color: black; -fx-background-color: #f4f4f4;">
          <children>
             <Label layoutX="10.0" layoutY="10.0" text="Host:" />
             <TextField fx:id="txthost" layoutX="90.0" layoutY="6.0" prefWidth="150.0" text="localhost"/>
@@ -36,46 +37,31 @@
          </children>
       </Pane>
 
-      <!-- PANEL CRUD -->
-      <Pane layoutX="20.0" layoutY="280.0" prefHeight="340.0" prefWidth="260.0" style="-fx-border-color: black; -fx-background-color: #f4f4f4;">
+      <!-- FORMULARIO DINÁMICO -->
+      <ScrollPane layoutX="20.0" layoutY="280.0" prefHeight="340.0" prefWidth="260.0"
+                  style="-fx-border-color: black; -fx-background-color: #f4f4f4;">
+         <content>
+            <VBox fx:id="formContainer" spacing="5.0">
+               <padding>
+                  <Insets top="10" right="10" bottom="10" left="10"/>
+               </padding>
+            </VBox>
+         </content>
+      </ScrollPane>
+
+      <!-- BOTONES CRUD -->
+      <Pane layoutX="300.0" layoutY="20.0" prefHeight="80.0" prefWidth="580.0"
+            style="-fx-border-color: black; -fx-background-color: #f4f4f4;">
          <children>
-            <Label layoutX="10.0" layoutY="15.0" text="ID:" />
-            <TextField fx:id="txtid" layoutX="90.0" layoutY="10.0" prefWidth="150.0"/>
-
-            <Label layoutX="10.0" layoutY="50.0" text="Nombres:" />
-            <TextField fx:id="txtnombres" layoutX="90.0" layoutY="45.0" prefWidth="150.0"/>
-
-            <Label layoutX="10.0" layoutY="85.0" text="Apellidos:" />
-            <TextField fx:id="txtapellidos" layoutX="90.0" layoutY="80.0" prefWidth="150.0"/>
-
-            <Label layoutX="10.0" layoutY="120.0" text="Sexo:" />
-            <ComboBox fx:id="cbsexo" layoutX="90.0" layoutY="115.0" prefWidth="150.0"/>
-
-            <Label layoutX="10.0" layoutY="155.0" text="Edad:" />
-            <TextField fx:id="txtedad" layoutX="90.0" layoutY="150.0" prefWidth="150.0"/>
-
-            <Label layoutX="10.0" layoutY="190.0" text="Nacimiento:" />
-            <DatePicker fx:id="datenacimiento" layoutX="90.0" layoutY="185.0" prefWidth="150.0"/>
-
-            <Button layoutX="10.0" layoutY="230.0" prefWidth="230.0" text="Guardar" onAction="#guardarUsuario"/>
-            <Button layoutX="10.0" layoutY="265.0" prefWidth="110.0" text="Modificar" onAction="#modificarUsuario"/>
-            <Button layoutX="130.0" layoutY="265.0" prefWidth="110.0" text="Eliminar" onAction="#EliminarUsuario"/>
-         </children>
-      </Pane>
-
-      <!-- PANEL IMAGEN -->
-      <Pane layoutX="300.0" layoutY="20.0" prefHeight="240.0" prefWidth="260.0" style="-fx-border-color: black; -fx-background-color: #f4f4f4;">
-         <children>
-            <Label layoutX="10.0" layoutY="10.0" text="Imagen:" />
-            <Button layoutX="10.0" layoutY="40.0" prefWidth="240.0" text="Seleccionar Imagen" onAction="#openFileChooser"/>
-            <TextField fx:id="txtnombreImagen" layoutX="10.0" layoutY="80.0" prefWidth="240.0"/>
-            <ImageView fx:id="vistaimagen" layoutX="60.0" layoutY="115.0" fitHeight="110.0" fitWidth="140.0" preserveRatio="true"/>
+            <Button layoutX="20.0" layoutY="20.0" prefWidth="150.0" text="Guardar" onAction="#guardar"/>
+            <Button layoutX="215.0" layoutY="20.0" prefWidth="150.0" text="Modificar" onAction="#modificar"/>
+            <Button layoutX="410.0" layoutY="20.0" prefWidth="150.0" text="Eliminar" onAction="#eliminar"/>
          </children>
       </Pane>
 
       <!-- TABLA DE DATOS -->
-      <TableView fx:id="tbUsuarios" layoutX="300.0" layoutY="280.0"
-                 prefHeight="340.0" prefWidth="580.0"
-                 onMouseClicked="#seleccionarUsuario"/>
+      <TableView fx:id="tbDatos" layoutX="300.0" layoutY="120.0"
+                 prefHeight="500.0" prefWidth="580.0"
+                 onMouseClicked="#seleccionarFila"/>
    </children>
 </AnchorPane>

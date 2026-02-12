@@ -1,281 +1,238 @@
 package Clases;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.sql.Types;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.sql.*;
+import java.util.*;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 
 public class CUsuarios {
 
     private final Connection conexion;
     private String tabla;
 
+    private List<String> columnas = new ArrayList<>();
+    private List<Integer> tipos = new ArrayList<>();
+    private List<String> columnasSinPK = new ArrayList<>();
+
     public CUsuarios(Connection conexion, String tabla) {
         this.conexion = conexion;
         this.tabla = tabla;
     }
 
-    public void setTabla(String tabla) {
-        this.tabla = tabla;
+    private void cargarMetadata() throws Exception {
+        columnas.clear();
+        tipos.clear();
+        columnasSinPK.clear();
+
+        String sql = "SELECT * FROM " + tabla + " LIMIT 1";
+        Statement st = conexion.createStatement();
+        ResultSet rs = st.executeQuery(sql);
+        ResultSetMetaData meta = rs.getMetaData();
+
+        int count = meta.getColumnCount();
+
+        for (int i = 1; i <= count; i++) {
+            columnas.add(meta.getColumnName(i));
+            tipos.add(meta.getColumnType(i));
+        }
+
+        // columnas sin la PK (primera columna)
+        for (int i = 1; i < columnas.size(); i++) {
+            columnasSinPK.add(columnas.get(i));
+        }
+
+        rs.close();
+        st.close();
     }
 
-    public void cargarTablas(ComboBox<String> combo) {
+    public void construirFormulario(VBox contenedor, Map<String, TextField> campos) {
         try {
-            Statement st = conexion.createStatement();
-            ResultSet rs = st.executeQuery("SELECT nombre_tabla FROM tablas_disponibles");
+            cargarMetadata();
+            contenedor.getChildren().clear();
+            campos.clear();
 
-            combo.getItems().clear();
-            while (rs.next()) {
-                combo.getItems().add(rs.getString("nombre_tabla"));
+            for (String col : columnas) {
+                Label lbl = new Label(col + ":");
+                TextField txt = new TextField();
+                txt.setPromptText(col);
+                contenedor.getChildren().addAll(lbl, txt);
+                campos.put(col, txt);
             }
 
         } catch (Exception e) {
-            showAlert("ERROR", "No se pudieron cargar las tablas: " + e.toString());
+            showAlert("ERROR", "Error al construir formulario: " + e.toString());
         }
     }
 
-    public void MostrarSexoCombo(ComboBox<String> comboSexo) {
-        comboSexo.getItems().clear();
-        comboSexo.setValue("Seleccione Sexo");
-
-        String sql = "SELECT * FROM sexo;";
-
+    public void MostrarTablaGenerica(TableView<Object[]> tablaView) {
         try {
-            Statement st = conexion.createStatement();
-            ResultSet rs = st.executeQuery(sql);
+            cargarMetadata();
 
-            while (rs.next()) {
-                int idSexo = rs.getInt("id");
-                String nombreSexo = rs.getString("sexo");
-
-                comboSexo.getItems().add(nombreSexo);
-                comboSexo.getProperties().put(nombreSexo, idSexo);
-            }
-
-        } catch (Exception e) {
-            showAlert("ERROR", "Error al mostrar sexos: " + e.toString());
-        }
-    }
-
-    public void AgregarUsuario(TextField nombres, TextField apellidos, ComboBox<String> combosexo,
-                               TextField edad, DatePicker fnacimiento, File foto) {
-
-        String consulta = "INSERT INTO " + tabla + " (nombres, apellidos, sexo, edad, fnacimiento, foto) VALUES (?,?,?,?,?,?)";
-
-        try (FileInputStream fis = new FileInputStream(foto);
-             CallableStatement cs = conexion.prepareCall(consulta)) {
-
-            cs.setString(1, nombres.getText());
-            cs.setString(2, apellidos.getText());
-
-            String nombreSexoSeleccionado = combosexo.getSelectionModel().getSelectedItem();
-            int idSexo = (int) combosexo.getProperties().get(nombreSexoSeleccionado);
-            cs.setInt(3, idSexo);
-
-            cs.setInt(4, Integer.parseInt(edad.getText()));
-
-            LocalDate fechaSeleccionada = fnacimiento.getValue();
-            Date fechaSQL = Date.valueOf(fechaSeleccionada);
-            cs.setDate(5, fechaSQL);
-
-            cs.setBinaryStream(6, fis, (int) foto.length());
-            cs.execute();
-
-            showAlert("Información", "Se guardo correctamente en la tabla: " + tabla);
-
-        } catch (Exception e) {
-            showAlert("ERROR", "Error al guardar: " + e.toString());
-        }
-    }
-
-    public void MostrarUsuarios(TableView<Object[]> TablaTotalUsuarios) {
-
-        TablaTotalUsuarios.getColumns().clear();
-
-        TableColumn<Object[], String> idColumn = new TableColumn<>("Id");
-        TableColumn<Object[], String> nombresColumn = new TableColumn<>("Nombres");
-        TableColumn<Object[], String> apellidosColumn = new TableColumn<>("Apellidos");
-        TableColumn<Object[], String> sexoColumn = new TableColumn<>("Sexo");
-        TableColumn<Object[], String> edadColumn = new TableColumn<>("Edad");
-        TableColumn<Object[], String> fnacimientoColumn = new TableColumn<>("FNacimiento");
-        TableColumn<Object[], String> fotoColumn = new TableColumn<>("Foto");
-
-        idColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[0].toString()));
-        nombresColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[1].toString()));
-        apellidosColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[2].toString()));
-        sexoColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[3].toString()));
-        edadColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[4].toString()));
-        fnacimientoColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[5].toString()));
-        fotoColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[6].toString()));
-
-        TablaTotalUsuarios.getColumns().addAll(idColumn, nombresColumn, apellidosColumn,
-                sexoColumn, edadColumn, fnacimientoColumn, fotoColumn);
-
-        String sql = "SELECT " + tabla + ".id, " + tabla + ".nombres, " + tabla + ".apellidos, sexo.sexo, " +
-                     tabla + ".edad, " + tabla + ".fnacimiento, " + tabla + ".foto " +
-                     "FROM " + tabla + " INNER JOIN sexo ON " + tabla + ".sexo = sexo.id;";
-
-        try {
+            String sql = "SELECT * FROM " + tabla;
             Statement st = conexion.createStatement();
             ResultSet rs = st.executeQuery(sql);
 
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+            tablaView.getColumns().clear();
+            tablaView.getItems().clear();
+
+            int count = columnas.size();
+
+            for (int i = 0; i < count; i++) {
+                final int index = i;
+                TableColumn<Object[], String> col = new TableColumn<>(columnas.get(i));
+                col.setCellValueFactory(data ->
+                        new SimpleStringProperty(
+                                data.getValue()[index] != null ? data.getValue()[index].toString() : ""
+                        )
+                );
+                tablaView.getColumns().add(col);
+            }
 
             while (rs.next()) {
-
-                java.sql.Date fechaSQL = rs.getDate("fnacimiento");
-                String nuevaFecha = (fechaSQL != null) ? sdf.format(fechaSQL) : null;
-
-                byte[] imageBytes = rs.getBytes("foto");
-                Image foto = null;
-
-                if (imageBytes != null) {
-                    try {
-                        foto = new Image(new ByteArrayInputStream(imageBytes));
-                    } catch (Exception e) {
-                        showAlert("ERROR", "Error cargando imagen: " + e.toString());
-                    }
+                Object[] row = new Object[count];
+                for (int i = 0; i < count; i++) {
+                    row[i] = rs.getObject(columnas.get(i));
                 }
-
-                Object[] rowData = {
-                    rs.getString("id"),
-                    rs.getString("nombres"),
-                    rs.getString("apellidos"),
-                    rs.getString("sexo"),
-                    rs.getString("edad"),
-                    nuevaFecha,
-                    foto
-                };
-
-                TablaTotalUsuarios.getItems().add(rowData);
+                tablaView.getItems().add(row);
             }
 
+            rs.close();
+            st.close();
+
         } catch (Exception e) {
-            showAlert("ERROR", "Error al mostrar usuarios: " + e.toString());
+            showAlert("ERROR", "Error al mostrar tabla: " + e.toString());
         }
     }
 
-    public void SeleccionarUsuario(TableView<Object[]> TablaTotalUsuarios, TextField id, TextField nombres,
-                                   TextField apellidos, ComboBox<String> combosexo, TextField edad,
-                                   DatePicker fnacimiento, ImageView vistaImagen) {
+    public void seleccionarFila(TableView<Object[]> tablaView, Map<String, TextField> campos) {
+        int fila = tablaView.getSelectionModel().getSelectedIndex();
+        if (fila < 0) return;
 
-        int fila = TablaTotalUsuarios.getSelectionModel().getSelectedIndex();
+        Object[] datos = tablaView.getItems().get(fila);
 
-        if (fila >= 0) {
-
-            Object[] filaSeleccionada = TablaTotalUsuarios.getItems().get(fila);
-
-            id.setText(filaSeleccionada[0].toString());
-            nombres.setText(filaSeleccionada[1].toString());
-            apellidos.setText(filaSeleccionada[2].toString());
-
-            combosexo.getSelectionModel().select(filaSeleccionada[3].toString());
-
-            edad.setText(filaSeleccionada[4].toString());
-
-            String fechaString = filaSeleccionada[5].toString();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            LocalDate fechaLocalDate = LocalDate.parse(fechaString, formatter);
-            fnacimiento.setValue(fechaLocalDate);
-
-            Image imagen = (Image) filaSeleccionada[6];
-            vistaImagen.setImage(imagen);
+        for (int i = 0; i < columnas.size(); i++) {
+            campos.get(columnas.get(i)).setText(
+                    datos[i] != null ? datos[i].toString() : ""
+            );
         }
     }
 
-    public void ModificarUsuario(TextField id, TextField nombres, TextField apellidos,
-                                 ComboBox<String> combosexo, TextField edad, DatePicker fnacimiento, File foto) {
-
-        String consulta = "UPDATE " + tabla + " SET nombres=?, apellidos=?, sexo=?, edad=?, fnacimiento=?, foto=? WHERE id=?";
-
+    public void insertarRegistro(Map<String, TextField> campos) {
         try {
-            CallableStatement cs = conexion.prepareCall(consulta);
+            cargarMetadata();
 
-            cs.setString(1, nombres.getText());
-            cs.setString(2, apellidos.getText());
+            StringBuilder sb = new StringBuilder();
+            sb.append("INSERT INTO ").append(tabla).append(" (");
 
-            String nombreSexoSeleccionado = combosexo.getSelectionModel().getSelectedItem();
-            int idSexo = (int) combosexo.getProperties().get(nombreSexoSeleccionado);
-            cs.setInt(3, idSexo);
-
-            cs.setInt(4, Integer.parseInt(edad.getText()));
-
-            LocalDate fechaSeleccionada = fnacimiento.getValue();
-            Date fechaSQL = Date.valueOf(fechaSeleccionada);
-            cs.setDate(5, fechaSQL);
-
-            if (foto != null) {
-                FileInputStream fis = new FileInputStream(foto);
-                cs.setBinaryStream(6, fis, (int) foto.length());
-            } else {
-                String obtenerImagenActualSQL = "SELECT foto FROM " + tabla + " WHERE id=?";
-                PreparedStatement obtenerImagen = conexion.prepareStatement(obtenerImagenActualSQL);
-                obtenerImagen.setInt(1, Integer.parseInt(id.getText()));
-                ResultSet rs = obtenerImagen.executeQuery();
-
-                if (rs.next()) {
-                    Blob blob = rs.getBlob("foto");
-                    if (blob != null) {
-                        cs.setBlob(6, blob);
-                    } else {
-                        cs.setNull(6, Types.BLOB);
-                    }
-                }
+            for (int i = 1; i < columnas.size(); i++) {
+                sb.append(columnas.get(i));
+                if (i < columnas.size() - 1) sb.append(", ");
             }
 
-            cs.setInt(7, Integer.parseInt(id.getText()));
-            cs.execute();
+            sb.append(") VALUES (");
 
-            showAlert("Información", "Se modifico correctamente en la tabla: " + tabla);
+            for (int i = 1; i < columnas.size(); i++) {
+                sb.append("?");
+                if (i < columnas.size() - 1) sb.append(", ");
+            }
+
+            sb.append(")");
+
+            PreparedStatement ps = conexion.prepareStatement(sb.toString());
+
+            int index = 1;
+            for (int i = 1; i < columnas.size(); i++) {
+                setValor(ps, index++, tipos.get(i), campos.get(columnas.get(i)).getText());
+            }
+
+            ps.executeUpdate();
+            ps.close();
+
+            showAlert("Información", "Registro insertado correctamente");
 
         } catch (Exception e) {
-            showAlert("ERROR", "No se modifico: " + e.toString());
+            showAlert("ERROR", "Error al insertar: " + e.toString());
         }
     }
 
-    public void EliminarUsuario(TextField id) {
-
-        String consulta = "DELETE FROM " + tabla + " WHERE id=?";
-
+    public void modificarRegistro(Map<String, TextField> campos) {
         try {
-            CallableStatement cs = conexion.prepareCall(consulta);
-            cs.setInt(1, Integer.parseInt(id.getText()));
-            cs.execute();
+            cargarMetadata();
 
-            showAlert("Información", "Se elimino correctamente de la tabla: " + tabla);
+            String pkCol = columnas.get(0);
+            String pkVal = campos.get(pkCol).getText();
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("UPDATE ").append(tabla).append(" SET ");
+
+            for (int i = 1; i < columnas.size(); i++) {
+                sb.append(columnas.get(i)).append("=?");
+                if (i < columnas.size() - 1) sb.append(", ");
+            }
+
+            sb.append(" WHERE ").append(pkCol).append("=?");
+
+            PreparedStatement ps = conexion.prepareStatement(sb.toString());
+
+            int index = 1;
+            for (int i = 1; i < columnas.size(); i++) {
+                setValor(ps, index++, tipos.get(i), campos.get(columnas.get(i)).getText());
+            }
+
+            setValor(ps, index, tipos.get(0), pkVal);
+
+            ps.executeUpdate();
+            ps.close();
+
+            showAlert("Información", "Registro modificado correctamente");
 
         } catch (Exception e) {
-            showAlert("ERROR", "No se elimino: " + e.toString());
+            showAlert("ERROR", "Error al modificar: " + e.toString());
         }
     }
 
-    public void limpiarCampos(TextField id, TextField nombres, TextField apellidos,
-                              ComboBox<String> combosexo, TextField edad, DatePicker fnacimiento) {
+    public void eliminarRegistro(Map<String, TextField> campos) {
+        try {
+            cargarMetadata();
 
-        id.setText("");
-        nombres.setText("");
-        apellidos.setText("");
-        edad.setText("");
-        fnacimiento.setValue(LocalDate.now());
+            String pkCol = columnas.get(0);
+            String pkVal = campos.get(pkCol).getText();
+
+            String sql = "DELETE FROM " + tabla + " WHERE " + pkCol + "=?";
+
+            PreparedStatement ps = conexion.prepareStatement(sql);
+            setValor(ps, 1, tipos.get(0), pkVal);
+            ps.executeUpdate();
+            ps.close();
+
+            showAlert("Información", "Registro eliminado correctamente");
+
+        } catch (Exception e) {
+            showAlert("ERROR", "Error al eliminar: " + e.toString());
+        }
+    }
+
+    private void setValor(PreparedStatement ps, int index, int tipo, String valor) throws Exception {
+        if (valor == null || valor.isEmpty()) {
+            ps.setNull(index, tipo);
+            return;
+        }
+
+        switch (tipo) {
+            case Types.INTEGER:
+                ps.setInt(index, Integer.parseInt(valor));
+                break;
+
+            case Types.NUMERIC:
+            case Types.DECIMAL:
+                ps.setBigDecimal(index, new java.math.BigDecimal(valor));
+                break;
+
+            default:
+                ps.setString(index, valor);
+                break;
+        }
     }
 
     private void showAlert(String title, String content) {

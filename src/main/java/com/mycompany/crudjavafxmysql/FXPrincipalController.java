@@ -2,27 +2,25 @@ package com.mycompany.crudjavafxmysql;
 
 import Clases.CConexion;
 import Clases.CUsuarios;
-import java.io.File;
 import java.net.URL;
 import java.sql.Connection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.stage.FileChooser;
+import javafx.scene.layout.VBox;
 
 public class FXPrincipalController implements Initializable {
 
     private Connection conexion;
-    private CUsuarios usuariosDAO;
+    private CUsuarios dao;
+    private Map<String, TextField> campos = new HashMap<>();
 
     @FXML private TextField txthost;
     @FXML private TextField txtpuerto;
@@ -31,23 +29,11 @@ public class FXPrincipalController implements Initializable {
     @FXML private PasswordField txtpassword;
     @FXML private TextField txttabla;
 
-    @FXML private ComboBox<String> cbsexo;
-
-    @FXML private TextField txtnombreImagen;
-    @FXML private ImageView vistaimagen;
-    @FXML private TextField txtnombres;
-    @FXML private TextField txtapellidos;
-    @FXML private TextField txtedad;
-    @FXML private DatePicker datenacimiento;
-    @FXML private TableView<Object[]> tbUsuarios;
-    @FXML private TextField txtid;
-
-    private File selectedFile;
+    @FXML private VBox formContainer;
+    @FXML private TableView<Object[]> tbDatos;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        txtid.setDisable(true);
-        txtnombreImagen.setDisable(true);
     }
 
     @FXML
@@ -63,74 +49,37 @@ public class FXPrincipalController implements Initializable {
         conexion = cc.estableceConexion(host, puerto, db, user, password);
 
         if (conexion != null) {
-            usuariosDAO = new CUsuarios(conexion, tabla);
+            dao = new CUsuarios(conexion, tabla);
 
-            usuariosDAO.MostrarSexoCombo(cbsexo);
-
-            tbUsuarios.getColumns().clear();
-            tbUsuarios.getItems().clear();
-            usuariosDAO.MostrarUsuarios(tbUsuarios);
+            dao.construirFormulario(formContainer, campos);
+            dao.MostrarTablaGenerica(tbDatos);
         }
     }
 
     @FXML
-    private void openFileChooser(ActionEvent event) {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Seleccionar Imagen");
-        fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif")
-        );
-
-        selectedFile = fileChooser.showOpenDialog(null);
-
-        if (selectedFile != null) {
-            txtnombreImagen.setText("Imagen seleccionada: " + selectedFile.getName());
-            try {
-                Image image = new Image(selectedFile.toURI().toString());
-                vistaimagen.setImage(image);
-            } catch (Exception e) {
-                txtnombreImagen.setText("Error al cargar imagen");
-            }
-        } else {
-            txtnombreImagen.setText("Error de seleccion de imagen");
-        }
+    private void guardar(ActionEvent event) {
+        if (dao == null) return;
+        dao.insertarRegistro(campos);
+        dao.MostrarTablaGenerica(tbDatos);
     }
 
     @FXML
-    private void guardarUsuario(ActionEvent event) {
-        usuariosDAO.AgregarUsuario(txtnombres, txtapellidos, cbsexo, txtedad, datenacimiento, selectedFile);
-
-        tbUsuarios.getColumns().clear();
-        tbUsuarios.getItems().clear();
-
-        usuariosDAO.MostrarUsuarios(tbUsuarios);
-        usuariosDAO.limpiarCampos(txtid, txtnombres, txtapellidos, cbsexo, txtedad, datenacimiento);
+    private void modificar(ActionEvent event) {
+        if (dao == null) return;
+        dao.modificarRegistro(campos);
+        dao.MostrarTablaGenerica(tbDatos);
     }
 
     @FXML
-    private void seleccionarUsuario(MouseEvent event) {
-        usuariosDAO.SeleccionarUsuario(tbUsuarios, txtid, txtnombres, txtapellidos, cbsexo, txtedad, datenacimiento, vistaimagen);
+    private void eliminar(ActionEvent event) {
+        if (dao == null) return;
+        dao.eliminarRegistro(campos);
+        dao.MostrarTablaGenerica(tbDatos);
     }
 
     @FXML
-    private void modificarUsuario(ActionEvent event) {
-        usuariosDAO.ModificarUsuario(txtid, txtnombres, txtapellidos, cbsexo, txtedad, datenacimiento, selectedFile);
-
-        tbUsuarios.getColumns().clear();
-        tbUsuarios.getItems().clear();
-
-        usuariosDAO.MostrarUsuarios(tbUsuarios);
-        usuariosDAO.limpiarCampos(txtid, txtnombres, txtapellidos, cbsexo, txtedad, datenacimiento);
-    }
-
-    @FXML
-    private void EliminarUsuario(ActionEvent event) {
-        usuariosDAO.EliminarUsuario(txtid);
-
-        tbUsuarios.getColumns().clear();
-        tbUsuarios.getItems().clear();
-
-        usuariosDAO.MostrarUsuarios(tbUsuarios);
-        usuariosDAO.limpiarCampos(txtid, txtnombres, txtapellidos, cbsexo, txtedad, datenacimiento);
+    private void seleccionarFila(MouseEvent event) {
+        if (dao == null) return;
+        dao.seleccionarFila(tbDatos, campos);
     }
 }
