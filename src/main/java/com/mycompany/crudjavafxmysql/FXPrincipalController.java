@@ -16,6 +16,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.FileChooser;
 
 /**
@@ -45,6 +46,9 @@ private DatePicker datenacimiento;
 
 @FXML
 private TableView<Object[]> tbUsuarios;
+
+@FXML 
+private TextField txtid;
 
     /**
      * Initializes the controller class.
@@ -95,9 +99,36 @@ private void guardarUsuario(ActionEvent event){
     
     Clases.CUsuarios objetoUsuarios = new Clases.CUsuarios();
     objetoUsuarios.AgregarUsuario(txtnombres, txtapellidos, cbsexo, txtedad, datenacimiento, selectedFile);
+    tbUsuarios.getColumns().clear();
+    tbUsuarios.getItems().clear();
+    objetoUsuarios.MostrarUsuarios(tbUsuarios);
+}
+
+@FXML
+private void seleccionarUsuario(MouseEvent event){
+    Clases.CUsuarios objetoUsuarios = new Clases.CUsuarios();
+    objetoUsuarios.SeleccionarUsuario(tbUsuarios, txtid, txtnombres, txtapellidos, cbsexo, txtedad, datenacimiento, vistaimagen, selectedFile);
     
 }
 
+@FXML
+private void modificarUsuario(ActionEvent event){
+    
+    Clases.CUsuarios objetoUsuarios = new Clases.CUsuarios();
+    objetoUsuarios.ModificarUsuario(txtid, txtnombres, txtapellidos, cbsexo, txtedad, datenacimiento, selectedFile);
+    tbUsuarios.getColumns().clear();
+    tbUsuarios.getItems().clear();
+    objetoUsuarios.MostrarUsuarios(tbUsuarios);
+}
 
+@FXML
+private void EliminarUsuario(ActionEvent event){
+    
+    Clases.CUsuarios objetoUsuarios = new Clases.CUsuarios();
+    objetoUsuarios.EliminarUsuario(txtid);
+    tbUsuarios.getColumns().clear();
+    tbUsuarios.getItems().clear();
+    objetoUsuarios.MostrarUsuarios(tbUsuarios);
+}
     
 }

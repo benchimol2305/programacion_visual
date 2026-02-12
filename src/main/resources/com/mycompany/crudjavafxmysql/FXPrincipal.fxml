@@ -18,7 +18,7 @@
             <Label layoutX="14.0" layoutY="62.0" text="Nombres:" />
             <Label layoutX="14.0" layoutY="97.0" text="Apellidos:" />
             <Label layoutX="14.0" layoutY="134.0" text="Sexo:" />
-            <TextField layoutX="73.0" layoutY="23.0" prefHeight="25.0" prefWidth="178.0" />
+            <TextField fx:id="txtid" layoutX="73.0" layoutY="23.0" prefHeight="25.0" prefWidth="178.0" />
             <TextField fx:id="txtnombres" layoutX="73.0" layoutY="58.0" prefHeight="25.0" prefWidth="178.0" />
             <TextField fx:id="txtapellidos" layoutX="73.0" layoutY="93.0" prefHeight="25.0" prefWidth="178.0" />
             <Label layoutX="13.0" layoutY="198.0" text="F.Nacimiento:" />
@@ -33,13 +33,13 @@
                </children>
             </Pane>
             <Button layoutX="27.0" layoutY="517.0" mnemonicParsing="false" onAction="#guardarUsuario" prefHeight="25.0" prefWidth="224.0" text="Guardar" />
-            <Button layoutX="27.0" layoutY="559.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="84.0" text="Modificar" />
-            <Button layoutX="145.0" layoutY="559.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="91.0" text="Eliminar" />
+            <Button layoutX="27.0" layoutY="559.0" mnemonicParsing="false" onAction="#modificarUsuario" prefHeight="25.0" prefWidth="84.0" text="Modificar" />
+            <Button layoutX="145.0" layoutY="559.0" mnemonicParsing="false" onAction="#EliminarUsuario" prefHeight="25.0" prefWidth="91.0" text="Eliminar" />
             <ComboBox fx:id="cbsexo" layoutX="73.0" layoutY="130.0" prefHeight="25.0" prefWidth="178.0" />
             <Label layoutX="13.0" layoutY="169.0" text="Edad:" />
             <TextField fx:id="txtedad" layoutX="73.0" layoutY="165.0" prefHeight="25.0" prefWidth="178.0" />
          </children>
       </Pane>
-      <TableView fx:id="tbUsuarios" layoutX="291.0" layoutY="12.0" prefHeight="625.0" prefWidth="556.0" />
+      <TableView fx:id="tbUsuarios" layoutX="291.0" layoutY="12.0" onMouseClicked="#seleccionarUsuario" prefHeight="625.0" prefWidth="556.0" />
    </children>
 </AnchorPane>

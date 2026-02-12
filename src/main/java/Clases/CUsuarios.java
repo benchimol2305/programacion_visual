@@ -6,12 +6,16 @@ package Clases;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.Types;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
@@ -20,6 +24,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 /**
  *
@@ -129,7 +134,7 @@ public class CUsuarios {
             Statement st = objetoConexion.estableceConexion().createStatement();
             ResultSet rs = st.executeQuery(sql);
             
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyy");
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
             
             while (rs.next()){
                 
@@ -170,7 +175,126 @@ public class CUsuarios {
             
         }
     
+    public void SeleccionarUsuario (TableView<Object[]> TablaTotalUsuarios, TextField id, TextField nombres, TextField apellidos, ComboBox<String> combosexo, TextField edad, DatePicker fnacimiento, ImageView vistaImagen,File foto){
+        
+        int fila = TablaTotalUsuarios.getSelectionModel().getSelectedIndex();
+        
+        if(fila>=0){
+            
+            Object[] filaSeleccionada = TablaTotalUsuarios.getItems().get(fila);
+            
+            id.setText(filaSeleccionada[0].toString());
+            nombres.setText(filaSeleccionada[1].toString());
+            apellidos.setText(filaSeleccionada[2].toString());
+            
+            combosexo.getSelectionModel().select(filaSeleccionada[3].toString());
+            
+            edad.setText(filaSeleccionada[4].toString());
+            
+            String fechaString = filaSeleccionada[5].toString();
+            
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            LocalDate fechaLocalDate = LocalDate.parse(fechaString,formatter);
+            fnacimiento.setValue(fechaLocalDate);
+            
+            Image imagen = (Image) filaSeleccionada[6];
+            vistaImagen.setImage(imagen);
+        }
+    }
     
+    public void ModificarUsuario(TextField id, TextField nombres, TextField apellidos, ComboBox<String> combosexo, TextField edad, DatePicker fnacimiento,File foto){
+        
+        CConexion objetoConexion = new CConexion();
+        
+        String consulta = "update usuarios SET nombres = ?,apellidos = ?,sexo=?,edad=?,fnacimiento=?,foto=? where id=?";
+        
+        try{
+            
+            CallableStatement cs = objetoConexion.estableceConexion().prepareCall(consulta);
+            cs.setString(1, nombres.getText());
+            cs.setString(2, apellidos.getText());
+            
+            String nombreSexoSeleccionado = combosexo.getSelectionModel().getSelectedItem();
+            
+            int idSexo = (int) combosexo.getProperties().get(nombreSexoSeleccionado);
+            cs.setInt(3, idSexo);
+            
+            cs.setInt(4, Integer.parseInt(edad.getText()));
+            
+            LocalDate fechaSeleccionada = fnacimiento.getValue();
+            Date fechaSQL = Date.valueOf(fechaSeleccionada);
+            cs.setDate(5, fechaSQL);
+            
+            
+            if (foto != null){
+                
+                FileInputStream fis= new FileInputStream(foto);
+                cs.setBinaryStream(6, fis, (int) foto.length());
+                
+            }else{
+                
+                String obtenerImagenActualSQL = "SELECT foto FROM usuarios WHERE id =?";
+                
+                try(PreparedStatement obtenerImagen = objetoConexion.estableceConexion().prepareStatement(obtenerImagenActualSQL)){
+                    obtenerImagen.setInt(1, Integer.parseInt(id.getText()));
+                    ResultSet rs = obtenerImagen.executeQuery();
+                    
+                    if(rs.next()){
+                        Blob blob = rs.getBlob("foto");
+                        if(blob != null){
+                            cs.setBlob(6, blob);
+                        } else{
+                            
+                            cs.setNull(6, Types.BLOB);
+                        }
+                        
+                    }
+
+                    
+                                        
+                } 
+                
+            }
+            
+            cs.setInt(7, Integer.parseInt(id.getText()));
+            cs.execute();
+            
+            showAlert("Informacion", "Se modifico. ");
+            
+
+
+        } catch (Exception e){
+             showAlert("Informacion", "No se modifico, "+ e.toString());
+            
+        } finally{
+            
+            objetoConexion.cerrarConexion();
+            
+        }
+        
+    }
+    
+    
+    public void EliminarUsuario (TextField id){
+        CConexion objetoConexion = new CConexion();
+        
+        String consulta = "DELETE FROM usuarios WHERE usuarios.id=?";
+        
+        try{
+            CallableStatement cs = objetoConexion.estableceConexion().prepareCall(consulta);
+            
+            cs.setInt(1, Integer.parseInt(id.getText()));
+            
+            cs.execute();
+            
+            showAlert("INFORMACION", "Se elimino correctamente. ");
+            
+        }catch(Exception e){
+            showAlert("ERROR", "No se elimino: " + e.toString());
+        }finally{
+            objetoConexion.cerrarConexion();
+        }
+    }
     
     private void showAlert(String title, String content){
     Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -179,4 +303,9 @@ public class CUsuarios {
     alert.setContentText(content);
     alert.showAndWait();
   }  
+
+    public void SeleccionarUsuario(TableView<Object[]> tbUsuarios, TextField txtid, TextField txtnombres, TextField txtapellidos, ComboBox<String> cbsexo, TextField txtedad, DatePicker datenacimiento, File selectedFile) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
 }
