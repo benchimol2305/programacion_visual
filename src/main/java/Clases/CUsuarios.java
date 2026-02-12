@@ -296,6 +296,17 @@ public class CUsuarios {
         }
     }
     
+    public void limpiarCampos(TextField id, TextField nombres, TextField apellidos, ComboBox<String> combosexo, TextField edad, DatePicker fnacimiento,File foto){
+        
+    id.setText("");
+    nombres.setText("");
+    apellidos.setText("");
+    edad.setText("");
+    fnacimiento.setValue(LocalDate.now());
+    
+    
+    }
+    
     private void showAlert(String title, String content){
     Alert alert = new Alert(Alert.AlertType.INFORMATION);
     alert.setTitle(title);

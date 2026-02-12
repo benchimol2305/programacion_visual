@@ -61,6 +61,9 @@ private TextField txtid;
         Clases.CUsuarios objetoUsuarios = new Clases.CUsuarios();
         objetoUsuarios.MostrarSexoCombo(cbsexo);
         objetoUsuarios.MostrarUsuarios(tbUsuarios);
+        
+        txtid.setDisable(true);
+        txtnombreImagen.setDisable(true);
     }  
     
 @FXML 
@@ -102,6 +105,7 @@ private void guardarUsuario(ActionEvent event){
     tbUsuarios.getColumns().clear();
     tbUsuarios.getItems().clear();
     objetoUsuarios.MostrarUsuarios(tbUsuarios);
+    objetoUsuarios.limpiarCampos(txtid, txtnombres, txtapellidos, cbsexo, txtedad, datenacimiento, selectedFile);
 }
 
 @FXML
@@ -119,6 +123,7 @@ private void modificarUsuario(ActionEvent event){
     tbUsuarios.getColumns().clear();
     tbUsuarios.getItems().clear();
     objetoUsuarios.MostrarUsuarios(tbUsuarios);
+    objetoUsuarios.limpiarCampos(txtid, txtnombres, txtapellidos, cbsexo, txtedad, datenacimiento, selectedFile);
 }
 
 @FXML
@@ -129,6 +134,7 @@ private void EliminarUsuario(ActionEvent event){
     tbUsuarios.getColumns().clear();
     tbUsuarios.getItems().clear();
     objetoUsuarios.MostrarUsuarios(tbUsuarios);
+    objetoUsuarios.limpiarCampos(txtid, txtnombres, txtapellidos, cbsexo, txtedad, datenacimiento, selectedFile);
 }
     
 }
