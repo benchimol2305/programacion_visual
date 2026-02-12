@@ -12,6 +12,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -42,6 +43,9 @@ private TextField txtedad;
 @FXML 
 private DatePicker datenacimiento;
 
+@FXML
+private TableView<Object[]> tbUsuarios;
+
     /**
      * Initializes the controller class.
      */
@@ -52,6 +56,7 @@ private DatePicker datenacimiento;
         
         Clases.CUsuarios objetoUsuarios = new Clases.CUsuarios();
         objetoUsuarios.MostrarSexoCombo(cbsexo);
+        objetoUsuarios.MostrarUsuarios(tbUsuarios);
     }  
     
 @FXML 
@@ -90,7 +95,7 @@ private void guardarUsuario(ActionEvent event){
     
     Clases.CUsuarios objetoUsuarios = new Clases.CUsuarios();
     objetoUsuarios.AgregarUsuario(txtnombres, txtapellidos, cbsexo, txtedad, datenacimiento, selectedFile);
-
+    
 }
 
 

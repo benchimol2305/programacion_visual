@@ -40,6 +40,6 @@
             <TextField fx:id="txtedad" layoutX="73.0" layoutY="165.0" prefHeight="25.0" prefWidth="178.0" />
          </children>
       </Pane>
-      <TableView layoutX="291.0" layoutY="12.0" prefHeight="625.0" prefWidth="556.0" />
+      <TableView fx:id="tbUsuarios" layoutX="291.0" layoutY="12.0" prefHeight="625.0" prefWidth="556.0" />
    </children>
 </AnchorPane>
